@@ -15,7 +15,6 @@ object Main{
     val conf = {
       new SparkConf()
         .setAppName("example-spark-scala-read-and-write-from-hdfs")
-        .set("spark.executor.memory", "512M")
     }
 
     // Creation of SparContext and SQLContext
