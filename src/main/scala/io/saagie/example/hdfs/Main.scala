@@ -1,8 +1,7 @@
 package io.saagie.example.hdfs
 
 import org.apache.log4j.LogManager
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.{SaveMode, SparkSession}
 
 object Main{
 
@@ -11,16 +10,9 @@ object Main{
   def main(args: Array[String]): Unit = {
 
     val log = LogManager.getRootLogger
-    // Configuration of SparkContext
-    val conf = {
-      new SparkConf()
-        .setAppName("example-spark-scala-read-and-write-from-hdfs")
-    }
-
-    // Creation of SparContext and SQLContext
-    val sc = new SparkContext(conf)
-    val sqlContext = new SQLContext(sc)
-    import sqlContext.implicits._
+    // Creation of Spark Session
+    val sparkSession = SparkSession.builder().appName("example-spark-scala-read-and-write-from-hdfs").getOrCreate()
+    import sparkSession.implicits._
 
     val hdfs_master = args(0)
     // ====== Creating a dataframe with 1 partition
@@ -28,16 +20,16 @@ object Main{
 
     // ======= Writing files
     // Writing file as parquet
-    df.write.format("parquet").mode("overwrite").save(hdfs_master + "user/hdfs/wiki/testwiki")
+    df.write.mode(SaveMode.Overwrite).parquet(hdfs_master + "user/hdfs/wiki/testwiki")
     //  Writing file as csv
-    df.write.format("com.databricks.spark.csv").mode("overwrite").save(hdfs_master + "user/hdfs/wiki/testwiki.csv")
+    df.write.mode(SaveMode.Overwrite).csv(hdfs_master + "user/hdfs/wiki/testwiki.csv")
 
     // ======= Reading files
     // Reading parquet files
-    val df_parquet = sqlContext.read.parquet(hdfs_master + "user/hdfs/wiki/testwiki")
+    val df_parquet = sparkSession.read.parquet(hdfs_master + "user/hdfs/wiki/testwiki")
     log.info(df_parquet.show())
     //  Reading csv files
-    val df_csv = sqlContext.read.format("com.databricks.spark.csv").option("inferSchema", "true").load(hdfs_master + "user/hdfs/wiki/testwiki.csv")
+    val df_csv = sparkSession.read.option("inferSchema", "true").csv(hdfs_master + "user/hdfs/wiki/testwiki.csv")
     log.info(df_csv.show())
   }
 }
